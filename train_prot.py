@@ -47,9 +47,66 @@ def generator_model5():
     model = Model(inputs=input, outputs=x)
     return model
 
+def generator_model50():
+    input = Input([50,50,3])
+    x  = Conv2D(1,(1,1),padding='same')(input)
+    x = Flatten()(x)
+    x = Dense(4096, activation='tanh')(x)
+    x = Dense(2048, activation='tanh')(x)
+    x = Dense(64*25*25, activation='tanh')(x)
+    x = BatchNormalization()(x)
+    x = Reshape((25,25,64))(x)
+    x = UpSampling2D((2,2))(x)
+    x = Conv2D(32,(5,5),padding='same',activation='tanh')(x)
+    x = UpSampling2D((2, 2))(x)
+    x = Conv2D(3, (5, 5), padding='same', activation='tanh')(x)
+    model = Model(inputs=input, outputs=x)
+    return model
+
+def generator_model500():
+    input = Input([500,500,3])
+    x  = Conv2D(1,(1,1),padding='same')(input)
+    x = Flatten()(x)
+    x = Dense(4096, activation='tanh')(x)
+    x = Dense(2048, activation='tanh')(x)
+    x = Dense(64*25*25, activation='tanh')(x)
+    x = BatchNormalization()(x)
+    x = Reshape((25,25,64))(x)
+    x = UpSampling2D((2,2))(x)
+    x = Conv2D(32,(5,5),padding='same',activation='tanh')(x)
+    x = UpSampling2D((2, 2))(x)
+    x = Conv2D(3, (5, 5), padding='same', activation='tanh')(x)
+    model = Model(inputs=input, outputs=x)
+    return model
 
 def discriminator_model5():
     input = Input([5,5,3])
+    x = Conv2D(64,(5,5),padding='same', activation='tanh')(input)
+    x = MaxPooling2D((2,2))(x)
+    x = Conv2D(128,(5,5), activation='tanh')(x)
+    x = MaxPooling2D((2, 2))(x)
+    x = Flatten()(x)
+    x = Dense(1024, activation='tanh')(x)
+    d = Dense(1, activation='sigmoid')(x)
+    cls = Dense(51, activation='softmax')(x)
+    model = Model(inputs=input, outputs=[d, cls])
+    return model
+
+def discriminator_model50():
+    input = Input([50,50,3])
+    x = Conv2D(64,(5,5),padding='same', activation='tanh')(input)
+    x = MaxPooling2D((2,2))(x)
+    x = Conv2D(128,(5,5), activation='tanh')(x)
+    x = MaxPooling2D((2, 2))(x)
+    x = Flatten()(x)
+    x = Dense(1024, activation='tanh')(x)
+    d = Dense(1, activation='sigmoid')(x)
+    cls = Dense(51, activation='softmax')(x)
+    model = Model(inputs=input, outputs=[d, cls])
+    return model
+
+def discriminator_model500():
+    input = Input([500,500,3])
     x = Conv2D(64,(5,5),padding='same', activation='tanh')(input)
     x = MaxPooling2D((2,2))(x)
     x = Conv2D(128,(5,5), activation='tanh')(x)
@@ -283,10 +340,10 @@ def save_images_or(generated_images,epoch):
 
 
 def train(BATCH_SIZE):
-    d = discriminator_model5()
+    d = discriminator_model()
     print d.summary()
     # d.load_weights('Models/D/discriminator1594')
-    g = generator_model5()
+    g = generator_model()
     print g.summary()
     X_tr = np.load('trainImagesIITM_n.npy')
     L_tr = np.load('trainLabelIITM_1hot.npy')
@@ -447,11 +504,11 @@ def train(BATCH_SIZE):
         s_x.append(alpha_loss)
 
 def generate(BATCH_SIZE, nice=False):
-    g = generator_model5()
+    g = generator_model()
     g.compile(loss='structural_loss', optimizer="SGD")
     g.load_weights('generator')
     if nice:
-        d = discriminator_model5()
+        d = discriminator_model()
         d.compile(loss='binary_crossentropy', optimizer="SGD")
         d.load_weights('discriminator')
         noise = np.random.uniform(-1, 1, (BATCH_SIZE*20, 100))
